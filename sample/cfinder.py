@@ -134,7 +134,6 @@ class cfind():
         print("start_finding")
         self.maxc = np.zeros(self.adv_seed_label.shape)
         self.adv_sample = np.zeros(self.adv_seed.shape)
-        l = adv_seed.shape[0]
         for i,v in enumerate(self.adv_seed):
             try:
                 self.maxc[i], self.adv_sample[i] = self.cfinder(v,self.adv_seed_label[i])

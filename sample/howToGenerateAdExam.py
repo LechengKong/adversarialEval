@@ -46,7 +46,8 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                  save_weights_only=True,
                                                  verbose=1)
 
-
+#here the best practice is not to train the model every time, but train the model and save the directory
+#pass directory to cfind object to get model weight
 #create model and fit on the traning dataset
 model = createModel()
 model.fit(train_images, train_labels, epochs=5, callbacks = [cp_callback])
