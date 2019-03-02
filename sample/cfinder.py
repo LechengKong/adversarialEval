@@ -32,6 +32,7 @@ class cfind():
         :param constrain: an array of constraints where each row correspons to one pixel in the seed
 
         """
+        print("init")
         self.adv_seed = seed
         self.adv_seed_label = seed_label
         self.model = model
@@ -71,6 +72,7 @@ class cfind():
         """
         initialize series of tensor and tensorflow session
         """
+        print("test_init")
         self.sess = tf.Session()
         keras.backend.set_session(self.sess)
         self.model.load_weights(self.checkpoint_path)
@@ -82,6 +84,7 @@ class cfind():
         self.lo_s = keras.losses.sparse_categorical_crossentropy(self.testensor_s,self.outtensor)
         self.g = tf.gradients(self.lo, self.intensor)
         self.g_s = tf.gradients(self.lo_s, self.intensor)
+        print("test_init_success")
     
     
     def cfinder(self,img, label, epi = 0.001, c = 20):
@@ -128,8 +131,10 @@ class cfind():
         """
         adversarial sample finding driver
         """
+        print("start_finding")
         self.maxc = np.zeros(self.adv_seed_label.shape)
         self.adv_sample = np.zeros(self.adv_seed.shape)
+        l = adv_seed.shape[0]
         for i,v in enumerate(self.adv_seed):
             try:
                 self.maxc[i], self.adv_sample[i] = self.cfinder(v,self.adv_seed_label[i])
