@@ -6,7 +6,6 @@ from tensorflow import keras        #use keras as frontend
 import os
 # Helper libraries
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.optimize as op
 
 from cfinder import cfind
@@ -67,3 +66,8 @@ samples = cf.getAdvSample()
 cs = cf.getC()
 
 print(cs)
+
+r = (samples-test_images[0:11]).reshape((11,784))
+v = np.matmul(r, np.transpose(r))/784
+f = np.sum(np.sqrt(v.diagonal()))/11
+print(f)

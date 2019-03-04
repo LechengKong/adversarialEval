@@ -10,7 +10,6 @@ from tensorflow import keras        #use keras as frontend
 import os
 # Helper libraries
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.optimize as op
 
 
