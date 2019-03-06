@@ -125,6 +125,8 @@ class cfind():
                 clast = cmid
             else:
                 c = cmid
+        ad = op.minimize(self.gradfunc, noise, method = 'L-BFGS-B', jac = True,args=(c, img, eval_lo, eval_g), bounds = self.constraint)
+        asample = ad.x.reshape(self.input_shape_p)
         return c, asample[0]
         
     def findAd(self):
