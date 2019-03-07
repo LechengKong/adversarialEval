@@ -58,7 +58,7 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
 #pass directory to cfind object to get model weight
 #create model and fit on the traning dataset
 model = createModel()
-model.fit(train_images, train_labels, epochs=5, callbacks = [cp_callback])
+model.fit(train_images, train_labels, epochs=32, callbacks = [cp_callback])
 score_tr=model.evaluate(train_images, train_labels,verbose=0)
 print('Training Error:',1-score_tr[1])
 score_te=model.evaluate(test_images, test_labels,verbose=0)

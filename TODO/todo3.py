@@ -37,7 +37,7 @@ test_images=test_images.astype('float32')
 def createModel():
     model = keras.Sequential([
         keras.layers.Flatten(input_shape=(28, 28)),
-        keras.layers.Dense(10, activation=tf.nn.softmax,kernel_regularizer=regularizers.l2(0.001))
+        keras.layers.Dense(10, activation=tf.nn.softmax,kernel_regularizer=regularizers.l2(0.1))
     ])
     model.compile(optimizer=tf.train.AdamOptimizer(),
               loss='sparse_categorical_crossentropy',
@@ -48,7 +48,7 @@ def createModel():
       
     
 #checkpoint saving callback initialization   (address format may change based on different operating system)
-checkpoint_path = "training_reg_0001/cp.ckpt"
+checkpoint_path = "training_reg_1/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                  save_weights_only=True,
@@ -74,7 +74,7 @@ cf.findAd()
 
 #access the samples and c values, you can either save them or directly use them
 samples = cf.getAdvSample()
-np.save('FC(10^-2)',samples)
+np.save('FC(10^-1)',samples)
 c = cf.getC()
 sh=(samples-test_images[0:num]).reshape((num,784))
 en=np.matmul(sh,np.transpose(sh))/784
