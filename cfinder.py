@@ -69,8 +69,9 @@ class cfind():
         """
         self.sess = tf.Session()
         keras.backend.set_session(self.sess)
+        self.testensor = tf.Variable([0])
+        self.sess.run(tf.global_variables_initializer())
         self.model.load_weights(self.checkpoint_path)
-        self.testensor = tf.convert_to_tensor([0])
         self.intensor = self.model.input
         self.outtensor = self.model.output
         self.lo = keras.losses.sparse_categorical_crossentropy(self.testensor,self.outtensor)
@@ -78,7 +79,7 @@ class cfind():
 
     
     
-    def cfinder(self,img, label, epi = 0.001, c = 20):
+    def cfinder(self,img, label, epi = 0.001, cg = 20):
         """
         find largest c possible for a specific sample img
         :param img: target sample
@@ -87,21 +88,19 @@ class cfind():
         :param c: initial guess for c
         """
         flag=0
-        for t in range(10):
+        perm = np.random.permutation(10)
+        for t in perm:
             if t == label:
                 continue
-            self.testensor = tf.convert_to_tensor([t])
-            self.lo = keras.losses.sparse_categorical_crossentropy(self.testensor,self.outtensor)
-            self.g = tf.gradients(self.lo, self.intensor)
-            eval_lo = self.lo
-            eval_g = self.g
+            self.sess.run(tf.assign(self.testensor,[t]))
+            c = cg
             clast = c
             noise = np.random.uniform(size=self.input_shape).flatten()/10
             l = label
             while l != t:
                 clast = c
                 c = c/2
-                ad = op.minimize(self.gradfunc, noise, method = 'L-BFGS-B', jac = True,args=(c, img, eval_lo, eval_g), bounds = self.constraint)
+                ad = op.minimize(self.gradfunc, noise, method = 'L-BFGS-B', jac = True,args=(c, img, self.lo, self.g), bounds = self.constraint)
                 asample = ad.x.reshape(self.input_shape_p)
                 l = np.argmax(self.model.predict(asample))
                 if clast-c<epi:
@@ -113,14 +112,14 @@ class cfind():
             raise Exception('bad initial guess, unable to find c')
         while clast-c >epi:
             cmid = (clast+c)/2
-            ad = op.minimize(self.gradfunc, noise, method = 'L-BFGS-B', jac = True,args=(cmid, img, eval_lo, eval_g), bounds = self.constraint)
+            ad = op.minimize(self.gradfunc, noise, method = 'L-BFGS-B', jac = True,args=(cmid, img, self.lo, self.g), bounds = self.constraint)
             asample = ad.x.reshape(self.input_shape_p)
             l = np.argmax(self.model.predict(asample))
             if l != t:
                 clast = cmid
             else:
                 c = cmid
-        ad = op.minimize(self.gradfunc, noise, method = 'L-BFGS-B', jac = True,args=(c, img, eval_lo, eval_g), bounds = self.constraint)
+        ad = op.minimize(self.gradfunc, noise, method = 'L-BFGS-B', jac = True,args=(c, img, self.lo, self.g), bounds = self.constraint)
         asample = ad.x.reshape(self.input_shape_p)
         return c, asample[0]
         

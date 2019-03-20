@@ -3,8 +3,8 @@
 #import library
 import tensorflow as tf     #cpu tensorflow   (may work on gpu)
 from tensorflow import keras        #use keras as frontend
-from keras import regularizers
-from keras.callbacks import EarlyStopping
+from tensorflow.keras import regularizers
+from tensorflow.keras.callbacks import EarlyStopping
 # Helper libraries
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,6 +15,7 @@ from cfinder import cfind
 
 # num is the number of the adversrail example that we intend to generate, by default is 10000
 num=10000
+Trainingtimes=80
 #load keras mnist dataset  (or any data set you like)
 mnist = keras.datasets.mnist
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
@@ -52,7 +53,7 @@ def createModel():
       
     
 #checkpoint saving callback initialization   (address format may change based on different operating system)
-checkpoint_path = "training_1/cp.ckpt"
+checkpoint_path = "sigmoid100/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                  save_weights_only=True,
@@ -63,7 +64,7 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
 #create model and fit on the traning dataset
 model = createModel()
 overfitCallback = EarlyStopping(monitor='loss', min_delta=0, patience = 64)
-model.fit(train_images, train_labels, epochs=1024, callbacks = [overfitCallback])
+model.fit(train_images, train_labels, epochs=Trainingtimes, callbacks = [overfitCallback,cp_callback])
 score_tr=model.evaluate(train_images, train_labels,verbose=0)
 print('Training Error:',1-score_tr[1])
 score_te=model.evaluate(test_images, test_labels,verbose=0)
@@ -80,6 +81,9 @@ cf.findAd()
 #access the samples and c values, you can either save them or directly use them
 samples = cf.getAdvSample()
 np.save('FC(1x1x1x-7)',samples)
+model.load_weights(checkpoint_path)
+score=model.evaluate(samples,test_labels[0:num],verbose=0)
+print(score)
 c = cf.getC()
 sh=(samples-test_images[0:num]).reshape((num,784))
 en=np.matmul(sh,np.transpose(sh))/784
