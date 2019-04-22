@@ -5,6 +5,8 @@ import tensorflow as tf     #cpu tensorflow   (may work on gpu)
 from tensorflow import keras        #use keras as frontend
 from tensorflow.keras import regularizers
 from tensorflow.keras.callbacks import EarlyStopping
+import keras.backend as K
+
 # Helper libraries
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,8 +17,8 @@ from cfinder import cfind
 
 # num is the number of the adversrail example that we intend to generate, by default is 10000
 num=10000
-Trainingtimes=30
-Temp=[1.1]
+Trainingtimes=10
+T=10000
 #load keras mnist dataset  (or any data set you like)
 mnist = keras.datasets.mnist
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
@@ -34,6 +36,9 @@ test_images = test_images/255.0
 #to change the type to float which could make the learning process easier
 train_images=train_images.astype('float32')
 test_images=test_images.astype('float32')
+
+def Self_T(x):
+    return tf.exp(x/T)/tf.reduce_sum(tf.exp(x/T))
 
 def One_hot(Prediction):
     Tr_label=[]
@@ -53,12 +58,13 @@ def Test_acc(A,B):
 
 
 #simple fully-connected neural network creation
-def createModel(Temp):
-    print('This is T=',Temp)
+def createModel():
+    print('This is T=',T)
     model = keras.Sequential()
     model.add(keras.layers.Flatten(input_shape=(28, 28)))
-    model.add(keras.layers.Lambda(lambda x: x / Temp))
-    model.add(keras.layers.Dense(10, activation=tf.nn.softmax,kernel_regularizer=regularizers.l2(0.00001)))
+    model.add(keras.layers.Dense(200, activation=tf.nn.sigmoid,kernel_regularizer=regularizers.l2(0.00000005)))
+    model.add(keras.layers.Dense(200, activation=tf.nn.sigmoid,kernel_regularizer=regularizers.l2(0.00000005)))
+    model.add(keras.layers.Dense(10, activation=Self_T))
     model.summary()
     model.compile(optimizer=tf.train.AdamOptimizer(),
               loss='sparse_categorical_crossentropy',
@@ -68,7 +74,7 @@ def createModel(Temp):
       
     
 #checkpoint saving callback initialization   (address format may change based on different operating system)
-checkpoint_path = "softmax103/cp.ckpt"
+checkpoint_path = "softmax104/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
                                                  save_weights_only=True,
@@ -77,19 +83,19 @@ cp_callback = tf.keras.callbacks.ModelCheckpoint(checkpoint_path,
 #here the best practice is not to train the model every time, but train the model and save the directory
 #pass directory to cfind object to get model weight
 #create model and fit on the traning dataset
-for t in Temp:
-    model = createModel(t)
-    overfitCallback = EarlyStopping(monitor='loss', min_delta=0, patience = 64)
-    model.fit(train_images, train_labels, epochs=Trainingtimes, callbacks = [overfitCallback,cp_callback])
-    score_tr=model.evaluate(train_images, train_labels,verbose=0)
-    prediction=model.predict(train_images)
-    # self_label=One_hot(prediction)
-    # self_error=Test_acc(self_label,train_labels)
-    np.save('softmax103.npy',prediction)
-    # print('Self Error:',self_error)
-    print('Training Error:',1-score_tr[1])
-    score_te=model.evaluate(test_images, test_labels,verbose=0)
-    print('Testing Error:',1-score_te[1])
+
+model = createModel()
+overfitCallback = EarlyStopping(monitor='loss', min_delta=0, patience = 64)
+model.fit(train_images, train_labels, epochs=Trainingtimes, callbacks = [overfitCallback,cp_callback])
+score_tr=model.evaluate(train_images, train_labels,verbose=0)
+prediction=model.predict(train_images)
+# self_label=One_hot(prediction)
+# self_error=Test_acc(self_label,train_labels)
+np.save('softmax105.npy',prediction)
+# print('Self Error:',self_error)
+print('Training Error:',1-score_tr[1])
+score_te=model.evaluate(test_images, test_labels,verbose=0)
+print('Testing Error:',1-score_te[1])
 
 #create cfinding object
 #only using the first 10 samples to save time
